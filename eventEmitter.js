@@ -2,36 +2,34 @@ function EventEmitter() {
 	this._events = this._events || {};
 }
 
-//给指定事件添加新的监听器，添加后位于监听器数组末端。
-// 参数 type 表示指定事件，listener表示监听器。type 必须为 string 类型，listener 为 function  类型。
+/**
+ * 给指定事件添加新的监听器，添加后位于监听器数组末端。
+ * 参数 type 表示指定事件，listener表示监听器。
+ * type 必须为 string 类型，listener 为 function  类型。
+ * 所有 EventEmitter 的实例在添加新的监听器时都会触发 'newListener' 事件。
+ */
+
 EventEmitter.prototype.on = function( type, listener ){
 	//先判断类型
-	if( typeof(type) != "string" ){
+	if( typeof(type) != 'string' ){
 		console.log( 'event name has to be represented by string');
 	}
-	// 使用typeof检测函数时，该操作符会返回‘function’。在safari 5及之前版本和Chrome7及之前
-	// 版本中使用typeof检测正则表达式时，由于规范的原因，这个操作符也返回‘function’。
-	if(!( typeof listener =='function' ) || !( listener.constructor == Function )){
+
+	if( !(typeof listener == 'function') ）{
 		console.log( 'listener has to be a function');
 	};
 
-	// 所有 EventEmitter 的实例在添加新的监听器时都会触发 'newListener' 事件。
-	//思路：遍历已存在的该事件对应的数组。如果有已有的listener和这个新传入的一致，则不触发'newListener'
+	//思路：遍历已存在的该事件对应的监听数组。如果有已有的listener和这个新传入的一致，则不触发'newListener'
 	//事件，否则触发newListener事件。
 	//判断该事件对应的监听数组是否存在,存在则循环判断，否则新建一个该事件对应的数组，并触发‘newListener’事件
 	if( this._events[ type ] ){
 		var listenerList = this._events[ type ];
 		var num = listenerList.length;
 		var newflag = true;
-		for( var i = 0; i < num; i++ ){
-			// 判断两个function是否相等,这里写的不对！！！！！！
-			if( listenerList[i].toString() == listener.toString() ){
-				flag = false; //表示不是添加新的监听器
-			}
-		}
+		var index = listenerList.indexOf( listener ); //判断原来的数组里有没有该监听函数
+		newflag = index > -1 ? false : true;
 		if( newflag && this._events[ 'newListener' ] ){
 			//添加新的监听器，触发’newListener‘事件。
-			//？？？？传什么参数进去呢？谁监听它？
 			this.emit( 'newListener' );
 		}
 	}else{
@@ -51,11 +49,11 @@ EventEmitter.prototype.on = function( type, listener ){
  * 每次只能移除一个listener，如果该listener被多次添加，则只能多次移除
  */
 EventEmitter.prototype.off = function( type, listener ){
-	if( typeof(type) != "string" ){
+	if( typeof(type) != 'string' ){
 		console.log( 'event name has to be represented by string');
 	}
-	if (!( typeof listener =='function' ) || !( listener.constructor == Function )){
-		console.log( 'listener has to be a function ');
+	if (!( typeof listener == 'function' ) )
+		console.log( 'listener has to be a function' );
 	}
 
 	if( !this._events[ type ] ){
@@ -64,15 +62,13 @@ EventEmitter.prototype.off = function( type, listener ){
 		//如果存在该事件的数组，遍历数组，删除第一个匹配的
 		var listenerList = this._events[ type ];
 		var len = listenerList.length;
-
+		var index = listenerList.indexOf( listener );
 		//如果只剩一个监听函数了，那么删除的时候就将该事件对应的监听数组都删除
-		if( len === 1 ){   
-			delete this._events[ type ];
-		}else{
-			for( var i = 0; i < len ; i++ ){
-				if( listenerList[i].toString() == listener.toString() ){
-					listenerList.splice( i, 0 );  //删除i这个位置上的项
-				}
+		if( index > -1 ){
+			if ( len == 1 ){
+				delete this._events[ type ];
+			}else{
+				listenerList.splice( index, 1 );  //删除i这个位置上的项
 			}
 		}
 		//'removeListener'事件被触发
@@ -90,7 +86,6 @@ EventEmitter.prototype.off = function( type, listener ){
 EventEmitter.prototype.emit = function( type ){
 	// 当一个 EventEmitter 的实例遇到错误时，典型的动作是触发一个 'error' 事件。
 	// 在 Node 中，错误事件被视为特殊情况，如果没有监听它，默认会打印一个错误堆栈并退出程序。
-
   if( type == 'error' ) {
     //判断有没有监听它的事件
     if ( !this._events[ 'error' ] ){
@@ -114,7 +109,6 @@ EventEmitter.prototype.emit = function( type ){
   	for( var j = 0; j < listenerLen; j++ ){
   		listenerList[ j ].apply( this, args );
   	}
-
   	return true;
 
   }else {
@@ -122,6 +116,37 @@ EventEmitter.prototype.emit = function( type ){
   }
 
 }
+
+/**
+ * 添加一个一次性listener
+ * 这个listener只会在下一次事件发生时被触发一次，触发完成后就被删除。
+ * 也就是说当这个type被emit时，通过once添加的listener被执行后删除。
+ * 问题就是我什么时候知道这个type被emit了？
+ */
+EventEmitter.prototype.once = function( type, listener ){
+	//先判断类型
+	if( typeof(type) != 'string' ){
+		console.log( 'event name has to be represented by string');
+	}
+	if( !(typeof listener == 'function') ）{
+		console.log( 'listener has to be a function');
+	}
+
+	var fired = false;
+	function helper(){
+		if( fired ) {
+			this.off( type, helper );
+		}else {
+			fired = true;
+			listener.apply( this, arguments );
+		}
+		return listener;
+	}
+	this.on( type, helper )
+	
+	return this;
+}
+
 
 /**
  * 	问题列表：
@@ -136,4 +161,4 @@ EventEmitter.prototype.emit = function( type ){
  */
 
 
-// exports.EventEmitter = EventEmitter;
+exports.EventEmitter = EventEmitter;
