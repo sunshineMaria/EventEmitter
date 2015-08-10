@@ -24,13 +24,14 @@ EventEmitter.prototype.on = function( type, listener ){
 		var num = listenerList.length;
 		var newflag = true;
 		for( var i = 0; i < num; i++ ){
-			// 判断两个function是否相等
+			// 判断两个function是否相等,这里写的不对！！！！！！
 			if( listenerList[i].toString() == listener.toString() ){
 				flag = false; //表示不是添加新的监听器
 			}
 		}
 		if( newflag && this._events[ 'newListener' ] ){
-			//添加新的监听器，触发’newListener‘事件
+			//添加新的监听器，触发’newListener‘事件。
+			//？？？？传什么参数进去呢？谁监听它？
 			this.emit( 'newListener' );
 		}
 	}else{
@@ -108,7 +109,8 @@ EventEmitter.prototype.emit = function( type ){
   		args[ i-1 ] = arguments [ i ]; //因为arguments下标为0的位置是type
   	}
 
-  	for( var j = 1; j < listenerLen; j++ ){
+  	//函数顺序执行
+  	for( var j = 0; j < listenerLen; j++ ){
   		listenerList[ j ].apply( this, args );
   	}
 
@@ -121,9 +123,15 @@ EventEmitter.prototype.emit = function( type ){
 }
 
 /**
- *  Multiple calls passing the same combination of event 
+ * 	问题列表：
+ * 	1. Multiple calls passing the same combination of event 
  *  and listener will result in the listener being added multiple times.
  *  这个是怎么实现呢？
+ *  2. removeListener 和 newListener 事件的监听函数在哪里定义的呀？需要自己定义吗？
+ *  3. 比较两个函数是否相等，不能单纯用toString(),这样的话，函数定义里有个空格不一样函数都会不一样，
+ *     所以比较函数还需要做处理。
+ *  4. 测试还不会用-_—！
+ *  
  */
 
 
