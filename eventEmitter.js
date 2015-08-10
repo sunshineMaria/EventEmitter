@@ -19,7 +19,7 @@ EventEmitter.prototype.on = function( type, listener ){
 	//思路：遍历已存在的该事件对应的数组。如果有已有的listener和这个新传入的一致，则不触发'newListener'
 	//事件，否则触发newListener事件。
 	//判断该事件对应的监听数组是否存在,存在则循环判断，否则新建一个该事件对应的数组，并触发‘newListener’事件
-	if( this._events[ type ] ) ){
+	if( this._events[ type ] ){
 		var listenerList = this._events[ type ];
 		var num = listenerList.length;
 		var newflag = true;
@@ -36,7 +36,7 @@ EventEmitter.prototype.on = function( type, listener ){
 		}
 	}else{
 		//不存在该事件对应的listener数组，则新建数组
-		var this._events[ type ] = [];
+		this._events[ type ] = [];
 	}
 
 	// 将listener添加到监听器数组末端
@@ -79,6 +79,7 @@ EventEmitter.prototype.off = function( type, listener ){
 		if( this._events[ 'removeListener' ] ){
 			this.emit( 'removeListener' );
 		}
+	}
 	return this;
 }
 
@@ -135,4 +136,4 @@ EventEmitter.prototype.emit = function( type ){
  */
 
 
-exports.EventEmitter = EventEmitter;
+// exports.EventEmitter = EventEmitter;
