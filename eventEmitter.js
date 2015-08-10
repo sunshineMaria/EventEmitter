@@ -3,17 +3,22 @@ function EventEmitter() {
 }
 
 /**
+ * 对参数的type进行检测
+ */
+function checkArguments( type ) {
+	if( typeof(type) != 'string' ){
+		console.log( 'event name has to be represented by string');
+	}
+}
+/**
  * 给指定事件添加新的监听器，添加后位于监听器数组末端。
  * 参数 type 表示指定事件，listener表示监听器。
  * type 必须为 string 类型，listener 为 function  类型。
  * 所有 EventEmitter 的实例在添加新的监听器时都会触发 'newListener' 事件。
  */
-
 EventEmitter.prototype.on = function( type, listener ){
 	//先判断类型
-	if( typeof(type) != 'string' ){
-		console.log( 'event name has to be represented by string');
-	}
+	checkArguments( type );
 
 	if( !(typeof listener == 'function') ）{
 		console.log( 'listener has to be a function');
@@ -49,14 +54,7 @@ EventEmitter.prototype.on = function( type, listener ){
  * 每次只能移除一个listener，如果该listener被多次添加，则只能多次移除
  */
 EventEmitter.prototype.off = function( type, listener ){
-	if( typeof(type) != 'string' ){
-		console.log( 'event name has to be represented by string');
-	}
-	//
-	// if (!( typeof listener == 'function' ) )
-	// 	console.log( 'listener has to be a function' );
-	// }
-	// 如果没传listener的话，则删除
+	checkArguments( type );
 
 	if( !this._events[ type ] ){
 		console.log( 'the event ' + type + ' is not exist' );
@@ -89,6 +87,7 @@ EventEmitter.prototype.off = function( type, listener ){
  * 如果事件有listener，返回true,否则，返回false
  */
 EventEmitter.prototype.emit = function( type ){
+	checkArguments( type );
 	// 当一个 EventEmitter 的实例遇到错误时，典型的动作是触发一个 'error' 事件。
 	// 在 Node 中，错误事件被视为特殊情况，如果没有监听它，默认会打印一个错误堆栈并退出程序。
   if( type == 'error' ) {
@@ -128,10 +127,7 @@ EventEmitter.prototype.emit = function( type ){
  * 也就是说当这个type被emit时，通过once添加的listener被执行后删除。
  */
 EventEmitter.prototype.once = function( type, listener ){
-	//先判断类型
-	if( typeof(type) != 'string' ){
-		console.log( 'event name has to be represented by string');
-	}
+	checkArguments( type );
 	if( !(typeof listener == 'function') ）{
 		console.log( 'listener has to be a function');
 	}
