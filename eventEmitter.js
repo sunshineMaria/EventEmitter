@@ -52,28 +52,33 @@ EventEmitter.prototype.off = function( type, listener ){
 	if( typeof(type) != 'string' ){
 		console.log( 'event name has to be represented by string');
 	}
-	if (!( typeof listener == 'function' ) )
-		console.log( 'listener has to be a function' );
-	}
+	//
+	// if (!( typeof listener == 'function' ) )
+	// 	console.log( 'listener has to be a function' );
+	// }
+	// 如果没传listener的话，则删除
 
 	if( !this._events[ type ] ){
 		console.log( 'the event ' + type + ' is not exist' );
 	}else {
-		//如果存在该事件的数组，遍历数组，删除第一个匹配的
-		var listenerList = this._events[ type ];
-		var len = listenerList.length;
-		var index = listenerList.indexOf( listener );
-		//如果只剩一个监听函数了，那么删除的时候就将该事件对应的监听数组都删除
-		if( index > -1 ){
-			if ( len == 1 ){
-				delete this._events[ type ];
-			}else{
-				listenerList.splice( index, 1 );  //删除i这个位置上的项
+		//如果存在该事件的数组,但没有传listener的话，删除整个数组
+		if( listener == 'undefined' ) {
+			delete this._events[ type ];
+		}else{
+			var listenerList = this._events[ type ];
+			var index = listenerList.indexOf( listener );
+			if( index > -1 ){
+				//如果只剩一个监听函数了，那么删除的时候就将该事件对应的监听数组都删除
+				if ( len == 1 ){
+					delete this._events[ type ];
+				}else{
+					listenerList.splice( index, 1 );  //删除i这个位置上的项
+				}
 			}
-		}
-		//'removeListener'事件被触发
-		if( this._events[ 'removeListener' ] ){
-			this.emit( 'removeListener' );
+			//'removeListener'事件被触发
+			if( this._events[ 'removeListener' ] ){
+				this.emit( 'removeListener' );
+			}
 		}
 	}
 	return this;
@@ -121,7 +126,6 @@ EventEmitter.prototype.emit = function( type ){
  * 添加一个一次性listener
  * 这个listener只会在下一次事件发生时被触发一次，触发完成后就被删除。
  * 也就是说当这个type被emit时，通过once添加的listener被执行后删除。
- * 问题就是我什么时候知道这个type被emit了？
  */
 EventEmitter.prototype.once = function( type, listener ){
 	//先判断类型
@@ -132,18 +136,12 @@ EventEmitter.prototype.once = function( type, listener ){
 		console.log( 'listener has to be a function');
 	}
 
-	var fired = false;
 	function helper(){
-		if( fired ) {
-			this.off( type, helper );
-		}else {
-			fired = true;
-			listener.apply( this, arguments );
-		}
-		return listener;
+		listener.apply( this, arguments );
+		this.off( type, helper );
 	}
+
 	this.on( type, helper )
-	
 	return this;
 }
 
@@ -157,7 +155,6 @@ EventEmitter.prototype.once = function( type, listener ){
  *  3. 比较两个函数是否相等，不能单纯用toString(),这样的话，函数定义里有个空格不一样函数都会不一样，
  *     所以比较函数还需要做处理。
  *  4. 测试还不会用-_—！
- *  
  */
 
 
